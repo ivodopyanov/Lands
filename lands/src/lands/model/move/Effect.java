@@ -3,7 +3,6 @@
  */
 package lands.model.move;
 
-import lands.model.Land;
 
 /**
  * @author ivodopynov
@@ -12,15 +11,22 @@ import lands.model.Land;
  */
 public class Effect
 {
-    private final Land target;
+    private final EffectTarget effectTarget;
+    private final Move move;
 
-    public Effect(Land target)
+    public Effect(EffectTarget effectTarget, Move move)
     {
-        this.target = target;
+        this.effectTarget = effectTarget;
+        this.move = move;
     }
 
-    public Land getTarget()
+    public EffectTarget getEffectTarget()
     {
-        return target;
+        return effectTarget;
+    }
+
+    public Move getMove()
+    {
+        return move;
     }
 }
