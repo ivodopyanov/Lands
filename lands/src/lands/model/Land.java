@@ -50,4 +50,10 @@ public class Land
     {
         this.quantity = quantity;
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format("Land [Color=%s, quanity=%d, player=%d]", color, quantity, owner);
+    }
 }

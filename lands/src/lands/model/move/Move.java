@@ -56,4 +56,10 @@ public class Move
     {
         return owner;
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format("Move [Color=%s, player=%d]", color, owner);
+    }
 }

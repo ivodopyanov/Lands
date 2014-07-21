@@ -19,7 +19,13 @@ public class Game
     private final List<Player> players = new ArrayList<>();
     private final List<PlayerArea> playerAreas = new ArrayList<>();
     private LinkedList<Move> stack = new LinkedList<>();
+    private int activePlayer = 0;
     private int priority = 0;
+
+    public int getActivePlayer()
+    {
+        return activePlayer;
+    }
 
     public List<PlayerArea> getPlayerAreas()
     {
@@ -41,6 +47,15 @@ public class Game
         return stack;
     }
 
+    public void incActivePlayer()
+    {
+        activePlayer++;
+        if (activePlayer == players.size())
+        {
+            activePlayer = 0;
+        }
+    }
+
     public void incPriority()
     {
         priority++;
@@ -48,6 +63,16 @@ public class Game
         {
             priority = 0;
         }
+    }
+
+    public void resetPriority()
+    {
+        priority = activePlayer;
+    }
+
+    public void setActivePlayer(int activePlayer)
+    {
+        this.activePlayer = activePlayer;
     }
 
     public void setPriority(int priority)

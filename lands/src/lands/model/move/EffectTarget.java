@@ -55,4 +55,10 @@ public class EffectTarget
     {
         return owner;
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format("EffectTarget [color=%s, player=%d]", color, owner);
+    }
 }

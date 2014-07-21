@@ -33,7 +33,11 @@ public class MoveHelper
         {
             result.add(Move.create(Color.White, player));
         }
-        if (isBlueMoveAvailable(player) && game.getPriority() != player)
+        if (isBlueCounterMoveAvailable(player) && game.getPriority() != player)
+        {
+            result.add(Move.create(Color.Blue, player));
+        }
+        if (isBlueMoveAvailable(player) && game.getPriority() == player)
         {
             result.add(Move.create(Color.Blue, player));
         }
@@ -85,16 +89,18 @@ public class MoveHelper
                 {
                     continue;
                 }
-                if (game.getPlayerAreas().get(player).getHand().isEmpty())
-                {
-                    result.add(EffectTarget.create(Color.NoColor, player));
-                }
+                boolean noLands = true;
                 for (Land land : game.getPlayerAreas().get(player).getHand().values())
                 {
                     if (land.getQuantity() > 0)
                     {
                         result.add(EffectTarget.create(land.getColor(), land.getOwner()));
+                        noLands = false;
                     }
+                }
+                if (noLands)
+                {
+                    result.add(EffectTarget.create(Color.NoColor, player));
                 }
             }
             break;
@@ -105,27 +111,34 @@ public class MoveHelper
                 {
                     continue;
                 }
-                if (game.getPlayerAreas().get(player).getBattlefield().isEmpty())
-                {
-                    result.add(EffectTarget.create(Color.NoColor, player));
-                }
+                boolean noLands = true;
                 for (Land land : game.getPlayerAreas().get(player).getBattlefield().values())
                 {
                     if (land.getQuantity() > 0)
                     {
                         result.add(EffectTarget.create(land.getColor(), land.getOwner()));
+                        noLands = false;
                     }
+                }
+                if (noLands)
+                {
+                    result.add(EffectTarget.create(Color.NoColor, player));
                 }
             }
             break;
         case Green:
-            if (game.getPlayerAreas().get(move.getOwner()).getGraveyard().isEmpty())
-            {
-                result.add(EffectTarget.create(Color.NoColor, move.getOwner()));
-            }
+            boolean noLands = true;
             for (Land land : game.getPlayerAreas().get(move.getOwner()).getGraveyard().values())
             {
-                result.add(EffectTarget.create(land.getColor(), land.getOwner()));
+                if (land.getQuantity() > 0)
+                {
+                    result.add(EffectTarget.create(land.getColor(), land.getOwner()));
+                    noLands = false;
+                }
+            }
+            if (noLands)
+            {
+                result.add(EffectTarget.create(Color.NoColor, move.getOwner()));
             }
             break;
         default:
@@ -144,7 +157,7 @@ public class MoveHelper
         return cardsInHand(player, Color.Black) > 0;
     }
 
-    private boolean isBlueMoveAvailable(int player)
+    private boolean isBlueCounterMoveAvailable(int player)
     {
         if (cardsInHand(player, Color.Blue) == 0)
         {
@@ -158,6 +171,11 @@ public class MoveHelper
             }
         }
         return false;
+    }
+
+    private boolean isBlueMoveAvailable(int player)
+    {
+        return cardsInHand(player, Color.Blue) > 0;
     }
 
     private boolean isGreenMoveAvailable(int player)

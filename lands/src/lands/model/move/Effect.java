@@ -3,7 +3,6 @@
  */
 package lands.model.move;
 
-
 /**
  * @author ivodopynov
  * @since 09 июля 2014 г.
@@ -28,5 +27,11 @@ public class Effect
     public Move getMove()
     {
         return move;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("Effect [move=%s, target=%s]", move, effectTarget);
     }
 }

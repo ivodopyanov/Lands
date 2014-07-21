@@ -3,8 +3,6 @@
  */
 package lands;
 
-import static lands.Constants.LOG;
-
 import java.util.Random;
 
 import lands.model.Color;
@@ -29,10 +27,10 @@ public class PlayerAreaController
     {
         if (area.getLibrary().isEmpty())
         {
-            throw new PlayerLostException(area.getOwner(), "emptyLibrary");
+            throw new PlayerLostException(area.getOwner(), "drawing from emptyLibrary");
         }
         Color nextColor = area.getLibrary().poll();
-        LOG.info(String.format("Player has drawn %s land", nextColor));
+        //LOG.info(String.format("Player %d has drawn %s land", area.getOwner(), nextColor));
         area.getHand().get(nextColor).inc();
     }
 

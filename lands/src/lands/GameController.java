@@ -13,6 +13,7 @@ import java.util.Set;
 
 import lands.model.Color;
 import lands.model.Game;
+import lands.model.Land;
 import lands.model.PlayerArea;
 import lands.model.move.Effect;
 import lands.model.move.EffectTarget;
@@ -59,23 +60,88 @@ public class GameController
                 processTurn();
             }
         }
+        catch (PlayerWonException e)
+        {
+            LOG.info(String.format("Player %d won because of %s", e.getPlayerId(), e.getMessage()));
+            //GG
+        }
         catch (PlayerLostException e)
         {
-            LOG.info(String.format("Player %d lost", e.getPlayerId()));
+            LOG.info(String.format("Player %d lost because of %s", e.getPlayerId(), e.getMessage()));
             //GG
         }
     }
 
-    private void processEffect(Effect effect) throws PlayerLostException
+    private String buildGameInfo()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Game state:\n\n");
+        for (int i = 0; i < game.getPlayers().size(); i++)
+        {
+            sb.append("Player " + i + ":\n");
+            sb.append("Hand:");
+            for (Land land : game.getPlayerAreas().get(i).getHand().values())
+            {
+                if (land.getQuantity() == 0)
+                {
+                    continue;
+                }
+                sb.append(" ");
+                for (int j = 0; j < land.getQuantity(); j++)
+                {
+                    sb.append(land.getColor().shortName());
+                }
+            }
+            sb.append("\n");
+            sb.append("Graveyard:");
+            for (Land land : game.getPlayerAreas().get(i).getGraveyard().values())
+            {
+                if (land.getQuantity() == 0)
+                {
+                    continue;
+                }
+                sb.append(" ");
+                for (int j = 0; j < land.getQuantity(); j++)
+                {
+                    sb.append(land.getColor().shortName());
+                }
+            }
+            sb.append("\n");
+            sb.append("Battlefield:");
+            for (Land land : game.getPlayerAreas().get(i).getBattlefield().values())
+            {
+                if (land.getQuantity() == 0)
+                {
+                    continue;
+                }
+                sb.append(" ");
+                for (int j = 0; j < land.getQuantity(); j++)
+                {
+                    sb.append(land.getColor().shortName());
+                }
+            }
+            sb.append("\n");
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    private void processEffect(Effect effect) throws PlayerLostException, PlayerWonException
     {
         switch (effect.getMove().getColor())
         {
         //White land draws a card
         case White:
             areaControllers.get(effect.getMove().getOwner()).draw();
+            game.getPlayerAreas().get(effect.getMove().getOwner()).getBattlefield().get(Color.White).inc();
             break;
-        //Blue land acts as Force of Will
+        //Blue land acts as Force of Will if played in response; otherwise - just put onto the battlefield
         case Blue:
+            if (game.getPriority() == effect.getMove().getOwner())
+            {
+                game.getPlayerAreas().get(effect.getMove().getOwner()).getBattlefield().get(Color.Blue).inc();
+                break;
+            }
             Iterator<Move> iterator = game.getStack().iterator();
             while (iterator.hasNext())
             {
@@ -83,8 +149,8 @@ public class GameController
                 if (moveOnStack.getColor() == effect.getEffectTarget().getColor()
                         && moveOnStack.getOwner() == effect.getEffectTarget().getOwner())
                 {
-                    LOG.info(String.format("%s land on stack of player %d is countered", moveOnStack.getColor(),
-                            moveOnStack.getOwner()));
+                    /*LOG.info(String.format("%s land on stack of player %d is countered", moveOnStack.getColor(),
+                            moveOnStack.getOwner()));*/
                     iterator.remove();
                     break;
                 }
@@ -92,21 +158,28 @@ public class GameController
             }
             game.getPlayerAreas().get(effect.getMove().getOwner()).getHand().get(effect.getEffectTarget().getColor())
                     .dec();
+            game.getPlayerAreas().get(effect.getMove().getOwner()).getGraveyard().get(Color.Blue).inc();
+            game.getPlayerAreas().get(effect.getMove().getOwner()).getGraveyard()
+                    .get(effect.getEffectTarget().getColor()).inc();
             break;
         //Black land acts as Thoughtseize
         case Black:
-            LOG.info(String.format("%s land in hand of player %d is discarded", effect.getEffectTarget().getColor(),
-                    effect.getEffectTarget().getOwner()));
+            /*LOG.info(String.format("%s land in hand of player %d is discarded", effect.getEffectTarget().getColor(),
+                    effect.getEffectTarget().getOwner()));*/
             if (effect.getEffectTarget().getColor() != Color.NoColor)
             {
                 game.getPlayerAreas().get(effect.getEffectTarget().getOwner()).getHand()
                         .get(effect.getEffectTarget().getColor()).dec();
+                game.getPlayerAreas().get(effect.getEffectTarget().getOwner()).getGraveyard()
+                        .get(effect.getEffectTarget().getColor()).inc();
+
             }
+            game.getPlayerAreas().get(effect.getMove().getOwner()).getBattlefield().get(Color.Black).inc();
             break;
         //Red land destroys a land on battlefield
         case Red:
-            LOG.info(String.format("%s land in the battlefield of player %d is destroyed", effect.getEffectTarget()
-                    .getColor(), effect.getEffectTarget().getOwner()));
+            /*LOG.info(String.format("%s land in the battlefield of player %d is destroyed", effect.getEffectTarget()
+                    .getColor(), effect.getEffectTarget().getOwner()));*/
             if (effect.getEffectTarget().getColor() != Color.NoColor)
             {
                 game.getPlayerAreas().get(effect.getEffectTarget().getOwner()).getBattlefield()
@@ -114,11 +187,12 @@ public class GameController
                 game.getPlayerAreas().get(effect.getEffectTarget().getOwner()).getGraveyard()
                         .get(effect.getEffectTarget().getColor()).inc();
             }
+            game.getPlayerAreas().get(effect.getMove().getOwner()).getBattlefield().get(Color.Red).inc();
             break;
         //Green land returns a land from owner's graveyard to hand
         case Green:
-            LOG.info(String.format("%s land is returned from the graveyard of player %d into his hand", effect
-                    .getEffectTarget().getColor(), effect.getEffectTarget().getOwner()));
+            /*LOG.info(String.format("%s land is returned from the graveyard of player %d into his hand", effect
+                    .getEffectTarget().getColor(), effect.getEffectTarget().getOwner()));*/
             if (effect.getEffectTarget().getColor() != Color.NoColor)
             {
                 game.getPlayerAreas().get(effect.getEffectTarget().getOwner()).getGraveyard()
@@ -126,9 +200,22 @@ public class GameController
                 game.getPlayerAreas().get(effect.getEffectTarget().getOwner()).getHand()
                         .get(effect.getEffectTarget().getColor()).inc();
             }
+            game.getPlayerAreas().get(effect.getMove().getOwner()).getBattlefield().get(Color.Green).inc();
             break;
         default:
             break;
+        }
+        int colorCount = 0;
+        for (Land land : game.getPlayerAreas().get(effect.getMove().getOwner()).getBattlefield().values())
+        {
+            if (land.getQuantity() > 0)
+            {
+                colorCount++;
+            }
+        }
+        if (colorCount == 5)
+        {
+            throw new PlayerWonException(effect.getMove().getOwner(), " completing spectrum");
         }
     }
 
@@ -151,8 +238,9 @@ public class GameController
                 {
                     continue;
                 }
-                LOG.info(String.format("%d player is responding move with %s land", response.getOwner(),
-                        response.getColor()));
+                /*LOG.info(String.format("%d player is responding move with %s land", response.getOwner(),
+                        response.getColor()));*/
+                game.getPlayerAreas().get(i).getHand().get(response.getColor()).dec();
                 game.getStack().addLast(response);
                 madeMove[i] = true;
                 someoneResponded = true;
@@ -161,14 +249,16 @@ public class GameController
         while (someoneResponded);
     }
 
-    private void processTurn() throws PlayerLostException
+    private void processTurn() throws PlayerLostException, PlayerWonException
     {
+        LOG.info(buildGameInfo());
         areaControllers.get(game.getPriority()).draw();
         Arrays.fill(madeMove, false);
         Set<Move> availableMoves = moveHelper.getAvailableMovesForPlayer(game.getPriority());
         Move move = playerControllers.get(game.getPriority()).selectMove(availableMoves, game);
+        game.getPlayerAreas().get(game.getPriority()).getHand().get(move.getColor()).dec();
         game.getStack().addLast(move);
-        LOG.info(String.format("%d player is making move with %s land", move.getOwner(), move.getColor()));
+        //LOG.info(String.format("%d player is making move with %s land", move.getOwner(), move.getColor()));
         madeMove[game.getPriority()] = true;
         while (!game.getStack().isEmpty())
         {
