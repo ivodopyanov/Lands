@@ -44,7 +44,7 @@ public class GameController
         playerControllers.add(playerController);
     }
 
-    public void startGame()
+    public int startGame()
     {
         for (PlayerAreaController areaController : areaControllers)
         {
@@ -63,11 +63,13 @@ public class GameController
         catch (PlayerWonException e)
         {
             LOG.info(String.format("Player %d won because of %s", e.getPlayerId(), e.getMessage()));
+            return e.getPlayerId() + 1;
             //GG
         }
         catch (PlayerLostException e)
         {
             LOG.info(String.format("Player %d lost because of %s", e.getPlayerId(), e.getMessage()));
+            return -e.getPlayerId() - 1;
             //GG
         }
     }
@@ -146,6 +148,11 @@ public class GameController
             while (iterator.hasNext())
             {
                 Move moveOnStack = iterator.next();
+                if (moveOnStack == null || effect == null || effect.getEffectTarget() == null)
+                {
+                    int test = 1;
+                }
+
                 if (moveOnStack.getColor() == effect.getEffectTarget().getColor()
                         && moveOnStack.getOwner() == effect.getEffectTarget().getOwner())
                 {
@@ -166,6 +173,10 @@ public class GameController
         case Black:
             /*LOG.info(String.format("%s land in hand of player %d is discarded", effect.getEffectTarget().getColor(),
                     effect.getEffectTarget().getOwner()));*/
+            if (effect.getEffectTarget() == null)
+            {
+                int test = 1;
+            }
             if (effect.getEffectTarget().getColor() != Color.NoColor)
             {
                 game.getPlayerAreas().get(effect.getEffectTarget().getOwner()).getHand()
@@ -193,6 +204,10 @@ public class GameController
         case Green:
             /*LOG.info(String.format("%s land is returned from the graveyard of player %d into his hand", effect
                     .getEffectTarget().getColor(), effect.getEffectTarget().getOwner()));*/
+            if (effect.getEffectTarget() == null)
+            {
+                int test = 1;
+            }
             if (effect.getEffectTarget().getColor() != Color.NoColor)
             {
                 game.getPlayerAreas().get(effect.getEffectTarget().getOwner()).getGraveyard()
